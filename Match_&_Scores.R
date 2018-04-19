@@ -1,5 +1,5 @@
 # Comment out this line after you run it for the first time (with #s)
-# install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
+install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
 
 library(httr)
 library(jsonlite)
