@@ -14,7 +14,7 @@ base <- "www.thebluealliance.com/api/v3/"
 # tur for turing, waamv for auburn mountainview
 # you can look these up in blue alliance
 year <- "2018"
-event <- "waahs"
+event <- "tur"
 team <- 2557
 
 # Queries TBA for match data for 2557 at an event
