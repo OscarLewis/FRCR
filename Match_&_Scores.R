@@ -1,5 +1,5 @@
 # Comment out this line after you run it for the first time (with #s)
-install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
+# install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
 
 library(httr)
 library(jsonlite)
@@ -14,7 +14,7 @@ base <- "www.thebluealliance.com/api/v3/"
 # tur for turing, waamv for auburn mountainview
 # you can look these up in blue alliance
 year <- "2018"
-event <- "tur"
+event <- "waahs"
 team <- 2557
 
 # Queries TBA for match data for 2557 at an event
@@ -109,7 +109,7 @@ rownames(match_data) <- match_names
 
 # Prints match and score data to csv files for excel
 match_file <- paste0(team, event, year, "_matches.csv")
-score_file <- paste0(team, event, year, "scores.csv")
+score_file <- paste0(team, event, year, "_scores.csv")
 write.csv(match_data, file = match_file, row.names = TRUE)
 if (length(score_data[!is.null(score_data)]) != 0) {
   rownames(score_data_combined) <- match_names
