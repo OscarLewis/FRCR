@@ -47,14 +47,9 @@ blue_alliance_teams <- blue_alliance_teams %>%
   unite(Teams, Team_1, Team_2, Team_3, sep = " ", remove = TRUE)
 blue_alliance_teams <- blue_alliance_teams[["Teams"]]
 
-# If scores are "-1" (TBA for not played), change to 0
-replace(red_score, red_score == -1, 0)
-replace(blue_score, blue_score == -1, 0)
-
 # Builds match data dataframe
 match_data <- results %>% subset(select = c(
-  actual_time, comp_level, event_key, key, match_number,
-  set_number, time, winning_alliance
+  actual_time, comp_level, match_number, time, winning_alliance
 ))
 
 # Adds scores to match data
@@ -68,7 +63,10 @@ match_data <- match_data %>% mutate(
 # Converts time from epoch to 24 hour (sorry you'll have to do the match to
 # 12 hour)
 time_of_match <- match_data %>% select(actual_time)
-if (length(time_of_match[!is.na(time_of_match)]) != 0) {
+time <- match_data %>% select(time)
+match_time_na <- is.na(match_data %>% select(actual_time))
+time_of_match[match_time_na] <- time[match_time_na]
+if (!all(is.na(time_of_match))) {
   time_of_match <- anytime(time_of_match[!is.na(time_of_match)])
   match_data[["actual_time"]] <- time_of_match
 }
@@ -80,17 +78,17 @@ if (length(match_time[!is.na(match_time)]) != 0) {
 
 levels <- match_data %>% select(comp_level)
 levels <- levels[["comp_level"]]
-match_numbers <- match_data %>% select(match_number)
-match_numbers <- match_numbers[["match_number"]]
-match_names <- paste0(levels, match_numbers)
-
+levels_num <- gsub("qm", 1, levels)
+levels_num <- gsub("qf", 2, levels_num)
+levels_num <- gsub("sf", 3, levels_num)
+levels_num <- gsub("f", 4, levels_num)
 amount_of_matches <- length(match_names)
 
 
 # Builds score data data frame
 score_data <- results %>% select(score_breakdown)
 score_data <- score_data[, 1]
-if (length(score_data[!is.null(score_data)]) != 0) {
+if (!all(is.na(score_data))) {
   score_data_blue <- score_data[["blue"]]
   colnames(score_data_blue) <- paste0("blue_", colnames(score_data_blue))
   score_data_red <- score_data[["red"]]
@@ -98,20 +96,25 @@ if (length(score_data[!is.null(score_data)]) != 0) {
   score_data_combined <- data.frame(c(score_data_blue, score_data_red))
   score_data_combined <- score_data_combined %>% mutate(
     "red_alliance" = red_alliance_teams,
-    "blue_alliance" = blue_alliance_teams
+    "blue_alliance" = blue_alliance_teams,
+    "comp_levels_num" = levels_num,
+    "com_level" = levels,
+    "match_number" = match_numbers
   )
+  score_data_combined <- score_data_combined %>% arrange(comp_levels_num, match_number)
 }
 
-# Arranges match data by match number
-match_data <- match_data %>% arrange(match_names)
+match_data <- match_data %>%  mutate("comp_levels_num" = levels_num)
 
-rownames(match_data) <- match_names
+# Arranges data by match number
+match_data <- match_data %>% arrange(comp_levels_num, match_number)
+
+
 
 # Prints match and score data to csv files for excel
 match_file <- paste0(team, event, year, "_matches.csv")
 score_file <- paste0(team, event, year, "_scores.csv")
 write.csv(match_data, file = match_file, row.names = TRUE)
-if (length(score_data[!is.null(score_data)]) != 0) {
-  rownames(score_data_combined) <- match_names
+if (!all(is.na(score_data))) {
   write.csv(score_data_combined, file = score_file, row.names = TRUE)
 }
