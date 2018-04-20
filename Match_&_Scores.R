@@ -1,5 +1,5 @@
 # Comment out this line after you run it for the first time (with #s)
-# install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
+install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
 
 library(httr)
 library(jsonlite)
@@ -82,8 +82,6 @@ levels_num <- gsub("qm", 1, levels)
 levels_num <- gsub("qf", 2, levels_num)
 levels_num <- gsub("sf", 3, levels_num)
 levels_num <- gsub("f", 4, levels_num)
-amount_of_matches <- length(match_names)
-
 
 # Builds score data data frame
 score_data <- results %>% select(score_breakdown)
@@ -94,11 +92,13 @@ if (!all(is.na(score_data))) {
   score_data_red <- score_data[["red"]]
   colnames(score_data_red) <- paste0("red_", colnames(score_data_red))
   score_data_combined <- data.frame(c(score_data_blue, score_data_red))
+  match_numbers <- match_data %>% select(match_number)
+  match_numbers <- match_numbers[, 1]
   score_data_combined <- score_data_combined %>% mutate(
     "red_alliance" = red_alliance_teams,
     "blue_alliance" = blue_alliance_teams,
     "comp_levels_num" = levels_num,
-    "com_level" = levels,
+    "comp_level" = levels,
     "match_number" = match_numbers
   )
   score_data_combined <- score_data_combined %>% arrange(comp_levels_num, match_number)
