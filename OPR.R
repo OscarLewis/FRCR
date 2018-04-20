@@ -1,4 +1,4 @@
-# To run this make sure these packages have been installed (to install them run 
+# To run this make sure these packages have been installed (to install them run
 # file with the next line of code uncommented, you only need to do this once per
 # machine)
 
@@ -13,9 +13,13 @@ library(tidyr)
 tba_auth <- " EdSrcK5eTwGAwsnfIuBbS8HUTe4nK4GlMIYC8AwPNDaPSgNmKPaGTrZwDLhqVzfR "
 base <- "www.thebluealliance.com/api/v3/"
 
+
+# Change these values
 year <- 2018
 team <- 2557
 event <- "tur"
+
+
 get_opr <- function(year_opr, event_opr) {
   # Queries TBA for match data for 2557 at an event
   query <- paste0("event/", year_opr, event_opr, "/oprs")
@@ -38,6 +42,10 @@ get_matches <- function(year_matches, team_matches, event_matches) {
 
 get_team_opr <- function(team) {
   oprs[[team]]
+}
+
+get_team_dpr <- function(team) {
+  dprs[[team]]
 }
 
 opr_results <- get_opr(year, event)
@@ -65,6 +73,15 @@ red_robot2_opr <- signif(sapply(red_alliance_teams[["robot2"]], get_team_opr,
 red_robot3_opr <- signif(sapply(red_alliance_teams[["robot3"]], get_team_opr,
   USE.NAMES = FALSE
 ), 4)
+red_robot1_dpr <- signif(sapply(red_alliance_teams[["robot1"]], get_team_dpr,
+  USE.NAMES = FALSE
+), 4)
+red_robot2_dpr <- signif(sapply(red_alliance_teams[["robot2"]], get_team_dpr,
+  USE.NAMES = FALSE
+), 4)
+red_robot3_dpr <- signif(sapply(red_alliance_teams[["robot3"]], get_team_dpr,
+  USE.NAMES = FALSE
+), 4)
 
 blue_alliance <- both_alliances[, 1]$blue
 blue_score <- blue_alliance %>% select(score)
@@ -81,13 +98,22 @@ blue_robot2_opr <- signif(sapply(blue_alliance_teams[["robot2"]], get_team_opr,
 blue_robot3_opr <- signif(sapply(blue_alliance_teams[["robot3"]], get_team_opr,
   USE.NAMES = FALSE
 ), 4)
+blue_robot1_dpr <- signif(sapply(blue_alliance_teams[["robot1"]], get_team_dpr,
+  USE.NAMES = FALSE
+), 4)
+blue_robot2_dpr <- signif(sapply(blue_alliance_teams[["robot2"]], get_team_dpr,
+  USE.NAMES = FALSE
+), 4)
+blue_robot3_dpr <- signif(sapply(blue_alliance_teams[["robot3"]], get_team_dpr,
+  USE.NAMES = FALSE
+), 4)
 
 comp_levels <- match_results[["comp_level"]]
 levels_num <- gsub("qm", 1, comp_levels)
 levels_num <- gsub("qf", 2, levels_num)
 levels_num <- gsub("sf", 3, levels_num)
 levels_num <- gsub("f", 4, levels_num)
-result_df <- match_results %>% select(match_number)
+result_df <- match_results %>% select(match_number, winning_alliance)
 result_df <- result_df %>% mutate(
   "comp_level" = comp_levels,
   "level_num" = levels_num
@@ -99,24 +125,55 @@ result_df <- result_df %>% mutate(
   / 3, 4),
   "blue_average_opr" = signif((blue_robot1_opr + blue_robot2_opr + blue_robot3_opr)
   / 3, 4),
-  "red_robot1" = paste(red_alliance_teams[["robot1"]], red_robot1_opr),
-  "red_robot2" = paste(red_alliance_teams[["robot2"]], red_robot2_opr),
-  "red_robot3" = paste(red_alliance_teams[["robot3"]], red_robot3_opr),
+  "red_average_dpr" = signif((red_robot1_dpr + red_robot2_dpr + red_robot3_dpr)
+  / 3, 4),
+  "blue_average_dpr" = signif((blue_robot1_dpr + blue_robot2_dpr + blue_robot3_dpr)
+  / 3, 4),
+  "red_robot1" = paste(red_alliance_teams[["robot1"]], paste0(
+    "opr =", red_robot1_opr,
+    " dpr =", red_robot1_dpr
+  )),
+  "red_robot2" = paste(red_alliance_teams[["robot2"]], paste0(
+    "opr =", red_robot2_opr,
+    " dpr =", red_robot2_dpr
+  )),
+  "red_robot3" = paste(red_alliance_teams[["robot3"]], paste0(
+    "opr =", red_robot3_opr,
+    " dpr =", red_robot3_dpr
+  )),
 
-  "blue_robot1" = paste(blue_alliance_teams[["robot1"]], blue_robot1_opr),
-  "blue_robot2" = paste(blue_alliance_teams[["robot2"]], blue_robot2_opr),
-  "blue_robot3" = paste(blue_alliance_teams[["robot3"]], blue_robot3_opr)
+  "blue_robot1" = paste(blue_alliance_teams[["robot1"]], paste0(
+    "opr =", blue_robot1_opr,
+    " dpr =", blue_robot1_dpr
+  )),
+  "blue_robot2" = paste(blue_alliance_teams[["robot2"]], paste0(
+    "opr =", blue_robot2_opr,
+    " dpr =", blue_robot2_dpr
+  )),
+  "blue_robot3" = paste(blue_alliance_teams[["robot3"]], paste0(
+    "opr =", blue_robot3_opr,
+    " dpr =", blue_robot3_dpr
+  ))
 )
 
-result_df <- result_df[, -3]
-prediction <- result_df$red_average_opr > result_df$blue_average_opr
-prediction <- gsub(TRUE, "Red", prediction)
-prediction <- gsub(FALSE, "Blue", prediction)
+result_df <- result_df %>% mutate(
+  "red_adjusted_score" = 2 /3 * red_average_opr + 1 / 2 * red_average_dpr,
+  "blue_adjusted_score" = 2 / 3 * blue_average_opr + 1 / 2 * blue_average_dpr
+)
+
+prediction <- result_df$red_adjusted_score > result_df$blue_adjusted_score
+prediction <- gsub(TRUE, "red", prediction)
+prediction <- gsub(FALSE, "blue", prediction)
 
 result_df <- result_df %>% mutate("predicted_winner" = prediction)
-result_df <- result_df[, c(2, 1, 11, 3, 4, 5, 6, 7, 8, 9, 10)]
 rownames(result_df) <- paste0(result_df$comp_level, result_df$match_number)
-result_df <- result_df[, c(-1, -2)]
+# result_df <- result_df[, c(1, 2, 13, 5, 6, 7, 8, 9, 10, 11, 12, 3, 4)]
+# result_df <- result_df[, c(-1, -12, -13)]
+
+print_df<- result_df %>% subset(select = c(
+  winning_alliance, predicted_winner, red_average_opr, red_average_dpr, 
+  red_robot1, red_robot2, red_robot3, blue_robot1, blue_robot2, blue_robot3
+))
 
 result_file <- paste0(team, event, year, "_oprs.csv")
-write.csv(result_df, file = result_file, row.names = TRUE)
+write.csv(print_df, file = result_file, row.names = TRUE)
