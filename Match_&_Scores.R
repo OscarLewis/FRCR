@@ -1,5 +1,8 @@
-# Comment out this line after you run it for the first time (with #s)
-install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
+# To run this make sure these packages have been installed (to install them run 
+# file with the next line of code uncommented, you only need to do this once per
+# machine)
+
+# install.packages(c("httr", "jsonlite", "dplyr", "anytime", "tidyr"))
 
 library(httr)
 library(jsonlite)
