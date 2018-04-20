@@ -58,12 +58,28 @@ dprs <- opr_results[["dprs"]]
 
 both_alliances <- match_results %>% select(alliances)
 
+comp_levels <- match_results[["comp_level"]]
+levels_num <- gsub("qm", 1, comp_levels)
+levels_num <- gsub("qf", 2, levels_num)
+levels_num <- gsub("sf", 3, levels_num)
+levels_num <- gsub("f", 4, levels_num)
+
+match_results$levels_num <- levels_num
+
 red_alliance <- both_alliances[, 1]$red
 red_score <- red_alliance %>% select(score)
 red_score <- as.numeric(red_score[, 1])
 red_alliance_teams <- do.call(rbind, red_alliance[["team_keys"]])
 red_alliance_teams <- as.data.frame(red_alliance_teams, stringsAsFactors = FALSE)
+
 colnames(red_alliance_teams) <- c("robot1", "robot2", "robot3")
+
+red_alliance_teams <- red_alliance_teams %>%  mutate(
+  "match_number" = match_results$match_number,
+  "levels_num" = match_results$levels_num)
+red_alliance_teams <- red_alliance_teams %>%  arrange(match_number, levels_num)
+
+
 red_robot1_opr <- signif(sapply(red_alliance_teams[["robot1"]], get_team_opr,
   USE.NAMES = FALSE
 ), 4)
@@ -88,7 +104,15 @@ blue_score <- blue_alliance %>% select(score)
 blue_score <- as.numeric(blue_score[, 1])
 blue_alliance_teams <- do.call(rbind, blue_alliance[["team_keys"]])
 blue_alliance_teams <- as.data.frame(blue_alliance_teams, stringsAsFactors = FALSE)
+
 colnames(blue_alliance_teams) <- c("robot1", "robot2", "robot3")
+
+blue_alliance_teams <- blue_alliance_teams %>%  mutate(
+  "match_number" = match_results$match_number,
+  "levels_num" = match_results$levels_num)
+blue_alliance_teams <- blue_alliance_teams %>%  arrange(match_number, levels_num)
+
+
 blue_robot1_opr <- signif(sapply(blue_alliance_teams[["robot1"]], get_team_opr,
   USE.NAMES = FALSE
 ), 4)
@@ -108,11 +132,6 @@ blue_robot3_dpr <- signif(sapply(blue_alliance_teams[["robot3"]], get_team_dpr,
   USE.NAMES = FALSE
 ), 4)
 
-comp_levels <- match_results[["comp_level"]]
-levels_num <- gsub("qm", 1, comp_levels)
-levels_num <- gsub("qf", 2, levels_num)
-levels_num <- gsub("sf", 3, levels_num)
-levels_num <- gsub("f", 4, levels_num)
 result_df <- match_results %>% select(match_number, winning_alliance)
 result_df <- result_df %>% mutate(
   "comp_level" = comp_levels,
@@ -157,7 +176,7 @@ result_df <- result_df %>% mutate(
 )
 
 result_df <- result_df %>% mutate(
-  "red_adjusted_score" = 2 /3 * red_average_opr + 1 / 2 * red_average_dpr,
+  "red_adjusted_score" = 2 / 3 * red_average_opr + 1 / 2 * red_average_dpr,
   "blue_adjusted_score" = 2 / 3 * blue_average_opr + 1 / 2 * blue_average_dpr
 )
 
@@ -170,8 +189,8 @@ rownames(result_df) <- paste0(result_df$comp_level, result_df$match_number)
 # result_df <- result_df[, c(1, 2, 13, 5, 6, 7, 8, 9, 10, 11, 12, 3, 4)]
 # result_df <- result_df[, c(-1, -12, -13)]
 
-print_df<- result_df %>% subset(select = c(
-  winning_alliance, predicted_winner, red_average_opr, red_average_dpr, 
+print_df <- result_df %>% subset(select = c(
+  winning_alliance, predicted_winner, red_average_opr, red_average_dpr,
   red_robot1, red_robot2, red_robot3, blue_robot1, blue_robot2, blue_robot3
 ))
 
