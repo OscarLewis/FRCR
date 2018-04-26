@@ -11,7 +11,8 @@ library(anytime)
 library(tidyr)
 
 # Sets up information for TBA API
-tba_auth <- " EdSrcK5eTwGAwsnfIuBbS8HUTe4nK4GlMIYC8AwPNDaPSgNmKPaGTrZwDLhqVzfR "
+source("api_key.R")
+tba_auth <- api_key.R
 base <- "www.thebluealliance.com/api/v3/"
 
 # tur for turing, waamv for auburn mountainview
